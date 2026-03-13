@@ -292,6 +292,36 @@ fn transform_text(
         }
     }
 
+    // Fallback regex for common placeholder patterns not captured by format parsers.
+    // Many parsers (e.g. JSON structured) don't populate entry.placeholders for
+    // inline patterns like {name}, {{count}}, %s, etc.
+    static PLACEHOLDER_RE: OnceLock<Regex> = OnceLock::new();
+    let placeholder_re = PLACEHOLDER_RE.get_or_init(|| {
+        Regex::new(concat!(
+            r"\{\{[^}]+\}\}",      // {{placeholder}}
+            r"|\{[a-zA-Z_]\w*\}",  // {placeholder}
+            r"|\$\{[^}]+\}",       // ${placeholder}
+            r"|\[\[[^\]]+\]\]",    // [[placeholder]]
+            r"|%[0-9]*\$?[sdfu@]", // %s, %d, %1$s, %@
+            r"|:[a-zA-Z_]\w*",     // :name (Laravel)
+            r"|%\{[^}]+\}",        // %{name} (Rails)
+            r"|%\([^)]+\)[sd]",    // %(name)s (Python/PO)
+        ))
+        .expect("placeholder regex pattern is a valid constant")
+    });
+    let ph_matches: Vec<String> = placeholder_re
+        .find_iter(&working)
+        .map(|m| m.as_str().to_string())
+        .collect();
+    for ph in &ph_matches {
+        if working.contains(ph.as_str()) && !token_map.values().any(|v| v == ph) {
+            let token = make_token(counter);
+            counter += 1;
+            working = working.replacen(ph.as_str(), &token, 1);
+            token_map.insert(token, ph.clone());
+        }
+    }
+
     // Replace HTML tags with tokens (not tracked in IR placeholder data)
     static HTML_RE: OnceLock<Regex> = OnceLock::new();
     let html_re = HTML_RE.get_or_init(|| {
