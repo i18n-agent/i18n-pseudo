@@ -1,6 +1,6 @@
 {
   "name": "@i18n-agent/i18n-pseudo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pseudo-translate i18n files for testing internationalization implementations",
   "bin": {
     "i18n-pseudo": "bin/i18n-pseudo"
