@@ -122,22 +122,29 @@ impl StrategyConfig {
     /// then apply individual enable/disable overrides.
     pub fn from_cli(cli: &Cli) -> Self {
         // Start from preset defaults
-        let (mut accents, mut cjk, mut special_chars, mut expansion, mut brackets, mut rtl, mut unicode_stress) =
-            match cli.preset {
-                Some(Preset::Default) | None => {
-                    if cli.preset.is_some() {
-                        // Explicit --preset default
-                        (true, false, false, None, true, false, false)
-                    } else {
-                        // No preset: nothing enabled by default
-                        (false, false, false, None, false, false, false)
-                    }
+        let (
+            mut accents,
+            mut cjk,
+            mut special_chars,
+            mut expansion,
+            mut brackets,
+            mut rtl,
+            mut unicode_stress,
+        ) = match cli.preset {
+            Some(Preset::Default) | None => {
+                if cli.preset.is_some() {
+                    // Explicit --preset default
+                    (true, false, false, None, true, false, false)
+                } else {
+                    // No preset: nothing enabled by default
+                    (false, false, false, None, false, false, false)
                 }
-                Some(Preset::Layout) => (false, false, false, Some(1.5), true, false, false),
-                Some(Preset::Charset) => (true, true, true, None, false, false, true),
-                Some(Preset::Rtl) => (false, false, false, Some(1.3), true, true, false),
-                Some(Preset::Full) => (true, true, true, Some(1.3), true, true, true),
-            };
+            }
+            Some(Preset::Layout) => (false, false, false, Some(1.5), true, false, false),
+            Some(Preset::Charset) => (true, true, true, None, false, false, true),
+            Some(Preset::Rtl) => (false, false, false, Some(1.3), true, true, false),
+            Some(Preset::Full) => (true, true, true, Some(1.3), true, true, true),
+        };
 
         // Individual enable flags override (turn ON)
         if cli.accents {

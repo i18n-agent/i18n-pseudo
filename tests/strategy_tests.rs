@@ -91,7 +91,12 @@ fn expansion_basic() {
     let s = ExpansionStrategy::new(1.5);
     let result = s.transform("Hello");
     // 5 * 1.5 = 7.5 -> 8 chars
-    assert!(result.chars().count() >= 8, "Got: {} ({})", result, result.chars().count());
+    assert!(
+        result.chars().count() >= 8,
+        "Got: {} ({})",
+        result,
+        result.chars().count()
+    );
 }
 
 #[test]
@@ -187,5 +192,8 @@ fn unicode_stress_has_combining() {
     let has_combining = result
         .chars()
         .any(|c| ('\u{0300}'..='\u{036F}').contains(&c));
-    assert!(has_combining, "Should contain combining diacritics: {result}");
+    assert!(
+        has_combining,
+        "Should contain combining diacritics: {result}"
+    );
 }

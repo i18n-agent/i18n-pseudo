@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write as IoWrite};
 use std::path::Path;
+use std::sync::OnceLock;
 
 use i18n_convert::detect::{detect_best, detect_format};
 use i18n_convert::formats::FormatRegistry;
@@ -59,7 +60,7 @@ pub fn run(cli: &Cli) -> Result<(), PseudoError> {
     }
 
     for file_path in &cli.files {
-        process_file(file_path, cli, &config, &pipeline, &registry)?;
+        process_file(file_path, cli, &pipeline, &registry)?;
     }
 
     Ok(())
@@ -69,7 +70,6 @@ pub fn run(cli: &Cli) -> Result<(), PseudoError> {
 fn process_file(
     file_path: &str,
     cli: &Cli,
-    _config: &StrategyConfig,
     pipeline: &StrategyPipeline,
     registry: &FormatRegistry,
 ) -> Result<(), PseudoError> {
@@ -163,9 +163,9 @@ fn write_output(file_path: &str, output: &[u8], cli: &Cli) -> Result<(), PseudoE
         // Write to output directory
         let out_path = Path::new(output_dir);
         fs::create_dir_all(out_path)?;
-        let filename = Path::new(file_path)
-            .file_name()
-            .ok_or_else(|| PseudoError::InvalidArgs(format!("Cannot extract filename from {file_path}")))?;
+        let filename = Path::new(file_path).file_name().ok_or_else(|| {
+            PseudoError::InvalidArgs(format!("Cannot extract filename from {file_path}"))
+        })?;
         let dest = out_path.join(filename);
         fs::write(dest, output)?;
     } else {
@@ -255,8 +255,7 @@ fn transform_plural_set(
 /// impossible for any strategy to corrupt by inserting characters in the middle.
 /// Supports up to 6400 tokens per text (U+E000..U+F8FF).
 fn make_token(counter: u32) -> String {
-    let c = char::from_u32(0xE000 + counter)
-        .expect("token counter exceeded PUA range");
+    let c = char::from_u32(0xE000 + counter).expect("token counter exceeded PUA range");
     c.to_string()
 }
 
@@ -294,7 +293,11 @@ fn transform_text(
     }
 
     // Replace HTML tags with tokens (not tracked in IR placeholder data)
-    let html_re = Regex::new(r"</?[a-zA-Z][a-zA-Z0-9]*(?:\s+[^>]*)?>").unwrap();
+    static HTML_RE: OnceLock<Regex> = OnceLock::new();
+    let html_re = HTML_RE.get_or_init(|| {
+        Regex::new(r"</?[a-zA-Z][a-zA-Z0-9]*(?:\s+[^>]*)?>")
+            .expect("HTML regex pattern is a valid constant")
+    });
     let html_matches: Vec<String> = html_re
         .find_iter(&working)
         .map(|m| m.as_str().to_string())
@@ -322,8 +325,8 @@ fn transform_text(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::strategies;
     use crate::cli::StrategyConfig;
+    use crate::strategies;
     use i18n_convert::ir::{I18nEntry, Placeholder};
 
     fn default_pipeline() -> StrategyPipeline {
@@ -411,7 +414,10 @@ mod tests {
         );
         // key2 should be transformed
         if let EntryValue::Simple(ref val) = resource.entries["key2"].value {
-            assert_ne!(val, "Hello", "translatable=None entry should be transformed");
+            assert_ne!(
+                val, "Hello",
+                "translatable=None entry should be transformed"
+            );
         }
     }
 }

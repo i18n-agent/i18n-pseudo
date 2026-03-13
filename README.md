@@ -11,19 +11,19 @@ Testing internationalization is tedious. Real translations are expensive and slo
 
 ## The Solution
 
-One binary. Feed it any localization file, get back a pseudo-translated version that exposes i18n issues instantly --- while preserving placeholders, ICU syntax, and file structure.
+One binary. Feed it any localization file, get back a pseudo-translated version that exposes i18n issues instantly — while preserving placeholders, file structure, and keys.
 
 ```bash
-i18n-pseudo en.json -o pseudo.json
+i18n-pseudo en.json -o output/
 ```
 
 ## Features
 
-- **7 pseudo-translation strategies** --- accents, CJK, special characters, expansion, brackets, RTL, and unicode stress testing
-- **5 presets** --- quick shorthand for common testing scenarios
-- **32 format support** --- every format supported by [i18n-convert](https://github.com/i18n-agent/i18n-convert)
-- **Placeholder preservation** --- `{name}`, `{{count}}`, `%s`, `%d`, `{0}`, ICU expressions are never mangled
-- **Pipe-friendly** --- reads from stdin, writes to stdout by default
+- **7 pseudo-translation strategies** — accents, CJK, special characters, expansion, brackets, RTL, and unicode stress testing
+- **5 presets** — shorthand for common testing scenarios
+- **32 format support** — every format supported by [i18n-convert](https://github.com/i18n-agent/i18n-convert)
+- **Placeholder preservation** — `{name}`, `{{count}}`, `%s`, `%d`, `${var}`, HTML tags are never mangled
+- **Multi-file input** — process multiple files in one command
 
 ## Installation
 
@@ -84,68 +84,108 @@ cargo build --release
 ## Quick Start
 
 ```bash
-# Pseudo-translate a JSON file with default settings (accents strategy)
-i18n-pseudo en.json -o pseudo.json
+# Pseudo-translate with default (accents + brackets)
+i18n-pseudo en.json -o output/
 
-# Use a preset for UI testing
-i18n-pseudo en.json --preset ui-review -o pseudo.json
+# Use a preset for layout testing
+i18n-pseudo en.json --preset layout -o output/
 
-# Apply multiple strategies
-i18n-pseudo en.json --strategy accents --strategy expansion -o pseudo.json
+# Apply specific strategies
+i18n-pseudo en.json --accents --expansion 1.5 -o output/
 
-# Pseudo-translate Android XML
-i18n-pseudo strings.xml -o strings-pseudo.xml
+# Override preset: layout preset minus brackets
+i18n-pseudo en.json --preset layout --no-brackets -o output/
 
-# Pipe from stdin
-cat en.json | i18n-pseudo --format json --strategy brackets
+# Multiple files at once
+i18n-pseudo en.json strings.xml messages.po -o output/
+
+# In-place modification (creates .bak backups)
+i18n-pseudo en.json --in-place --accents
+
+# Single file to stdout
+i18n-pseudo en.json --brackets
 ```
 
 ## Strategies
 
-Each strategy transforms translation values in a different way to expose specific i18n issues.
+Each strategy transforms translation values to expose specific i18n issues.
 
-| Strategy | Description | Example Input | Example Output |
-|----------|-------------|---------------|----------------|
-| `accents` | Replaces ASCII with accented equivalents | `Hello World` | `Helloo Woorld` |
-| `cjk` | Replaces characters with CJK equivalents | `Hello` | `太尔尔口` |
-| `special-chars` | Inserts special/diacritic characters | `Hello` | `H!e@l#l$o%` |
-| `expansion` | Pads text to simulate language expansion (~30%) | `Save` | `Save Lorem ip` |
-| `brackets` | Wraps values in brackets for visual detection | `Hello` | `[Hello]` |
-| `rtl` | Wraps text with RTL marks for bidi testing | `Hello` | (RTL-wrapped text) |
-| `unicode-stress` | Inserts combining marks, zero-width chars | `Hello` | `H\u0300e\u0301l\u0302l\u0303o` |
+| Strategy | Flag | Example Input | Example Output |
+|----------|------|---------------|----------------|
+| Accents | `--accents` | `Hello World` | `Ĥéľľó Ẃóŕľð` |
+| CJK | `--cjk` | `Hello World` | `Hello中 Worl韓d` |
+| Special chars | `--special-chars` | `Hello World` | `Hello§ W¶orld` |
+| Expansion | `--expansion <1.0-3.0>` | `Save` | `Save~~~` |
+| Brackets | `--brackets` | `Hello` | `[Hello]` |
+| RTL | `--rtl` | `Hello` | `\u202BHello\u202C` |
+| Unicode stress | `--unicode-stress` | `Hello` | `H̀é̀l̂l̃o` |
 
 ## Presets
 
-Presets are shorthand for common strategy combinations.
+Presets are shorthand for common strategy combinations. Individual flags override preset defaults.
 
-| Preset | Strategies Enabled | Use Case |
-|--------|--------------------|----------|
-| `quick` | `accents` | Fast visual check that strings are externalized |
-| `ui-review` | `accents` + `expansion` + `brackets` | Full UI review --- see expansion issues and unlocalized strings |
-| `bidi` | `rtl` + `brackets` | RTL / bidirectional text testing |
-| `stress` | `unicode-stress` + `expansion` + `special-chars` | Push rendering to the limit |
-| `cjk-check` | `cjk` + `expansion` | Test CJK character rendering and text expansion |
+| Preset | Strategies | Use Case |
+|--------|------------|----------|
+| `default` | accents + brackets | Quick visual scan for untranslated strings |
+| `layout` | expansion 1.5 + brackets | Test UI overflow/truncation |
+| `charset` | accents + cjk + special-chars + unicode-stress | Character rendering/encoding |
+| `rtl` | rtl + brackets + expansion 1.3 | Right-to-left layout testing |
+| `full` | all 7, expansion 1.3 | Kitchen sink |
+
+```bash
+# Use full preset but disable CJK
+i18n-pseudo en.json --preset full --no-cjk -o output/
+```
 
 ## CLI Reference
 
 ```
-Usage: i18n-pseudo [OPTIONS] [INPUT]
+USAGE:
+    i18n-pseudo [OPTIONS] <FILES>...
 
-Arguments:
-  [INPUT]  Input file (reads from stdin if omitted)
+ARGS:
+    <FILES>...    Input file paths (format auto-detected via i18n-convert)
 
-Options:
-  -o, --output <FILE>          Output file (default: stdout)
-      --format <FORMAT>        Input format (auto-detected if omitted)
-  -s, --strategy <STRATEGY>    Strategy to apply (can be repeated)
-  -p, --preset <PRESET>        Use a named preset
-      --expansion-ratio <N>    Text expansion ratio (default: 0.3)
-      --verbose                Show processing details
-  -V, --version                Print version
-  -h, --help                   Print help
+OPTIONS:
+    -o, --output <PATH>         Output directory (default: stdout for single file)
+    -f, --format <FORMAT>       Override format detection (e.g. json, android-xml)
+        --in-place              Modify files in-place (creates .bak backups)
+        --no-backup             Skip .bak when using --in-place
+
+        --preset <PRESET>       default, layout, charset, rtl, full
+        --accents               Enable accented characters
+        --cjk                   Enable CJK insertion
+        --special-chars         Enable special character insertion
+        --expansion <RATIO>     Enable text expansion (1.0-3.0)
+        --brackets              Enable bracket wrapping
+        --rtl                   Enable RTL bidi markers
+        --unicode-stress        Enable unicode stress testing
+        --no-accents            Disable (override preset)
+        --no-cjk                Disable (override preset)
+        --no-special-chars      Disable (override preset)
+        --no-expansion          Disable (override preset)
+        --no-brackets           Disable (override preset)
+        --no-rtl                Disable (override preset)
+        --no-unicode-stress     Disable (override preset)
+
+    -h, --help                  Print help
+    -V, --version               Print version
 ```
 
-When no `--strategy` or `--preset` is specified, the `accents` strategy is used by default.
+When no `--preset` or individual flags are specified, defaults to accents + brackets.
+
+### Multi-file Behavior
+
+- **Single file, no `-o`**: prints to stdout
+- **Single file + `-o dir/`**: writes to `dir/filename`
+- **Multiple files**: `-o` required, must be a directory
+- **`--in-place`**: overwrites originals with `.bak` backup
+
+### Exit Codes
+
+- `0` — success
+- `1` — parse/write/IO error
+- `2` — invalid arguments or ambiguous format detection
 
 ## Supported Formats (32)
 
@@ -216,15 +256,15 @@ All formats supported by [i18n-convert](https://github.com/i18n-agent/i18n-conve
 ```json
 {
   "greeting": "Hello, {name}!",
-  "items": "{count, plural, one {# item} other {# items}}"
+  "save": "Save"
 }
 ```
 
-**Output (`pseudo.json` with `--preset ui-review`):**
+**Output (default: accents + brackets):**
 ```json
 {
-  "greeting": "[Helloo, {name}! Lorem ipsum]",
-  "items": "{count, plural, one {[# iiTem Lorem]} other {[# iiTems Lorem ip]}}"
+  "greeting": "[Ĥéľľó, {name}!]",
+  "save": "[Šáṽé]"
 }
 ```
 
@@ -238,11 +278,11 @@ All formats supported by [i18n-convert](https://github.com/i18n-agent/i18n-conve
 </resources>
 ```
 
-**Output (with `--strategy accents`):**
+**Output (`--accents`):**
 ```xml
 <resources>
-    <string name="app_name">My Aapp</string>
-    <string name="welcome">Weelcoomee, %s!</string>
+    <string name="app_name">Ṁý Áþþ</string>
+    <string name="welcome">Ẃéľçóɱé, %s!</string>
 </resources>
 ```
 
@@ -254,11 +294,16 @@ All formats supported by [i18n-convert](https://github.com/i18n-agent/i18n-conve
 "greeting" = "Hello, %@!";
 ```
 
-**Output (with `--strategy brackets`):**
+**Output (`--brackets`):**
 ```
 "save_button" = "[Save]";
 "greeting" = "[Hello, %@!]";
 ```
+
+## Known Limitations
+
+- **ICU message syntax** inside `Simple` values (e.g., `{count, plural, one {# item} other {# items}}`) may be corrupted. Well-parsed files use the format's native plural/select support which maps to the IR's `Plural`/`Select` variants and is handled correctly.
+- **Ambiguous formats** (e.g., `.json` could be structured JSON or i18next) require `-f` to specify. The CLI will exit with code 2 listing candidates.
 
 ## Contributing
 
@@ -268,6 +313,6 @@ All formats supported by [i18n-convert](https://github.com/i18n-agent/i18n-conve
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+MIT License — see [LICENSE](LICENSE) file.
 
 Built by [i18nagent.ai](https://i18nagent.ai)

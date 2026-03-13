@@ -168,10 +168,16 @@ fn preset_default_uses_accents_and_brackets() {
     assert_eq!(pipeline.len(), 2, "default preset = accents + brackets");
 
     let result = pipeline.apply("Hello");
-    assert!(result.starts_with('['), "Should start with bracket: {result}");
+    assert!(
+        result.starts_with('['),
+        "Should start with bracket: {result}"
+    );
     assert!(result.ends_with(']'), "Should end with bracket: {result}");
     // Inside brackets, chars should be accented
-    assert!(result.contains('\u{00E9}'), "Should contain accented 'e': {result}");
+    assert!(
+        result.contains('\u{00E9}'),
+        "Should contain accented 'e': {result}"
+    );
 }
 
 #[test]
@@ -201,7 +207,10 @@ fn plural_values_all_transformed() {
             plural.one.as_ref().unwrap().contains('['),
             "one form should be transformed"
         );
-        assert!(plural.other.contains('['), "other form should be transformed");
+        assert!(
+            plural.other.contains('['),
+            "other form should be transformed"
+        );
     } else {
         panic!("Expected Plural variant");
     }
@@ -242,7 +251,10 @@ fn select_values_transformed() {
     transform_value(&mut value, &[], &pipeline);
 
     if let EntryValue::Select(ref select) = value {
-        assert_eq!(select.variable, "gender", "variable name should be unchanged");
+        assert_eq!(
+            select.variable, "gender",
+            "variable name should be unchanged"
+        );
         for (key, val) in &select.cases {
             assert!(
                 val.contains('['),
@@ -282,8 +294,7 @@ fn empty_pipeline_no_change() {
 
 /// Single PUA character token (same as pseudo.rs).
 fn make_token(counter: u32) -> String {
-    let c = char::from_u32(0xE000 + counter)
-        .expect("token counter exceeded PUA range");
+    let c = char::from_u32(0xE000 + counter).expect("token counter exceeded PUA range");
     c.to_string()
 }
 
@@ -380,8 +391,7 @@ fn transform_value(
         }
         EntryValue::Select(ref mut select) => {
             for case_value in select.cases.values_mut() {
-                *case_value =
-                    transform_text_with_placeholders(case_value, placeholders, pipeline);
+                *case_value = transform_text_with_placeholders(case_value, placeholders, pipeline);
             }
         }
         EntryValue::MultiVariablePlural(ref mut mvp) => {
@@ -403,8 +413,7 @@ fn transform_value(
                 if let Some(ref mut m) = ps.many {
                     *m = transform_text_with_placeholders(m, placeholders, pipeline);
                 }
-                ps.other =
-                    transform_text_with_placeholders(&ps.other, placeholders, pipeline);
+                ps.other = transform_text_with_placeholders(&ps.other, placeholders, pipeline);
             }
         }
     }

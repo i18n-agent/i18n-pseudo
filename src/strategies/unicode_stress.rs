@@ -24,8 +24,8 @@ const ZWJ: char = '\u{200D}';
 /// Emoji sequences to insert periodically
 const EMOJI_SEQUENCES: &[&str] = &[
     "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}", // family
-    "\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}",           // rainbow flag
-    "\u{1F469}\u{200D}\u{1F4BB}",                     // woman technologist
+    "\u{1F3F3}\u{FE0F}\u{200D}\u{1F308}",          // rainbow flag
+    "\u{1F469}\u{200D}\u{1F4BB}",                  // woman technologist
 ];
 
 impl Strategy for UnicodeStressStrategy {
@@ -90,7 +90,10 @@ mod tests {
         let has_combining = result
             .chars()
             .any(|c| ('\u{0300}'..='\u{036F}').contains(&c));
-        assert!(has_combining, "Should contain combining diacritics: {result}");
+        assert!(
+            has_combining,
+            "Should contain combining diacritics: {result}"
+        );
     }
 
     #[test]
