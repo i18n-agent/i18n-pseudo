@@ -19,7 +19,7 @@ impl Strategy for CjkStrategy {
             result.push(ch);
             char_count += 1;
 
-            if char_count % 5 == 0 {
+            if char_count.is_multiple_of(5) {
                 result.push(CJK_CHARS[cjk_idx % CJK_CHARS.len()]);
                 cjk_idx += 1;
             }

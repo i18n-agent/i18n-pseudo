@@ -22,7 +22,7 @@ impl Strategy for SpecialCharsStrategy {
             result.push(ch);
             char_count += 1;
 
-            if char_count % 7 == 0 {
+            if char_count.is_multiple_of(7) {
                 result.push(SPECIAL_CHARS[special_idx % SPECIAL_CHARS.len()]);
                 special_idx += 1;
             }

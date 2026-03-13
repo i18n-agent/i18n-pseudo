@@ -44,18 +44,18 @@ impl Strategy for UnicodeStressStrategy {
             char_count += 1;
 
             // Add combining diacritic every 3 chars
-            if char_count % 3 == 0 && ch.is_alphanumeric() {
+            if char_count.is_multiple_of(3) && ch.is_alphanumeric() {
                 result.push(COMBINING_DIACRITICS[diacritic_idx % COMBINING_DIACRITICS.len()]);
                 diacritic_idx += 1;
             }
 
             // Add ZWJ every 8 chars
-            if char_count % 8 == 0 {
+            if char_count.is_multiple_of(8) {
                 result.push(ZWJ);
             }
 
             // Add emoji sequence every 12 chars
-            if char_count % 12 == 0 {
+            if char_count.is_multiple_of(12) {
                 result.push_str(EMOJI_SEQUENCES[emoji_idx % EMOJI_SEQUENCES.len()]);
                 emoji_idx += 1;
             }
