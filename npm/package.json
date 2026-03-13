@@ -1,0 +1,22 @@
+{
+  "name": "@i18n-agent/i18n-pseudo",
+  "version": "0.1.0",
+  "description": "Pseudo-translate i18n files for testing internationalization implementations",
+  "bin": {
+    "i18n-pseudo": "bin/i18n-pseudo"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "repository": "https://github.com/i18n-agent/i18n-pseudo",
+  "license": "MIT"
+}

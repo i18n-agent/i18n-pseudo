@@ -1,0 +1,20 @@
+[package]
+name = "i18n-pseudo"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/i18n-agent/i18n-pseudo"
+keywords = ["i18n", "l10n", "pseudo-translation", "localization", "testing"]
+categories = ["command-line-utilities", "internationalization"]
+
+[dependencies]
+i18n-convert = { git = "https://github.com/i18n-agent/i18n-convert" }
+clap = { version = "4", features = ["derive"] }
+thiserror = "2"
+regex = "1"
+
+[dev-dependencies]
+indexmap = "2"
+pretty_assertions = "1"
+regex = "1"
+tempfile = "3"
