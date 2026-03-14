@@ -2,6 +2,7 @@
 name = "i18n-pseudo"
 version = "0.2.0"
 edition = "2021"
+description = "Pseudo-translate i18n localization files for testing internationalization implementations"
 license = "MIT"
 repository = "https://github.com/i18n-agent/i18n-pseudo"
 keywords = ["i18n", "l10n", "pseudo-translation", "localization", "testing"]

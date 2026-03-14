@@ -1,7 +1,7 @@
 class I18nPseudo < Formula
   desc "Pseudo-translate i18n files for testing internationalization"
   homepage "https://github.com/i18n-agent/i18n-pseudo"
-  version "0.1.0"
+  version "0.2.0"
   license "MIT"
 
   on_macos do
